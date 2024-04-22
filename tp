@@ -1,0 +1,17 @@
+$currentMonth = (int)date('m');
+$currentYear = (int)date('Y');
+
+$filteredData = [];
+
+foreach ($data as $key => $dateString) {
+  $date = DateTime::createFromFormat('Y-m-d', $dateString);
+  
+  // Check if date is in current month and year
+  if ($date->format('Y') === $currentYear && $date->format('m') === $currentMonth) {
+    // Check if date is greater than the 11th of the current month
+    $day = (int)$date->format('d');
+    if ($day > 11) {
+      $filteredData[$key] = $dateString;
+    }
+  }
+}
