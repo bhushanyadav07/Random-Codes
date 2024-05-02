@@ -1,7 +1,24 @@
-$currentMonth = date('m');
-$currentYear = date('Y');
 
-$currentMonthDates = array_filter($dates, function($date) use ($currentMonth, $currentYear) {
-    $dateParts = explode('-', $date);
-    return $dateParts[1] == $currentMonth && $dateParts[0] == $currentYear;
-});
+function checkAndExtendDates($dateArray, $checkDate) {
+  $formattedDateArray = [];
+
+  // Convert array values to DateTime objects
+  foreach ($dateArray as $key => $value) {
+    $formattedDateArray[$key] = new DateTime($value);
+  }
+
+  $checkDateObject = new DateTime($checkDate);
+
+  // Check if date is present in the array
+  if (in_array($checkDateObject, $formattedDateArray)) {
+    echo "Date: " . $checkDate . " found in the array.\n";
+  } else {
+    echo "Date: " . $checkDate . " not found in the array.\n";
+  }
+
+  // Generate dates for the next 10 days
+  for ($i = 1; $i <= 10; $i++) {
+    $nextDate = $checkDateObject->add(new DateInterval('P' . $i . 'D'));
+    echo "Next Day " . $i . ": " . $nextDate->format('Y-m-d') . "\n";
+  }
+}
