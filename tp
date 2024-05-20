@@ -10,12 +10,17 @@ function isWithinWindow($startDateString) {
   // Convert today's date string to DateTime object
   $today = DateTime::createFromFormat('Y-m-d', $todayString);
 
-  // Create a DateTime object for next month's 22nd day (adjusted for wrapping around year)
-  $nextMonth = (int)$startDate->format('m') + 1; // Get next month number
-  $endYear = $startDate->format('Y') + ($nextMonth === 12);  // Adjust year if next month is December
+  // Get month from start date
+  $month = (int)$startDate->format('m');
 
-  // Handle cases where next_month is 12 (December) to avoid creating invalid dates
-  $endDate = new DateTime("$endYear-" . ($nextMonth === 12 ? 1 : $nextMonth) . "-22");
+  // Calculate next month, handling overflow for December
+  $nextMonth = ($month === 12) ? 1 : $month + 1;
+
+  // Adjust year if next month is January (after December)
+  $endYear = $startDate->format('Y') + ($nextMonth === 1);
+
+  // Create a DateTime object for next month's 22nd day (adjusted for wrapping around year)
+  $endDate = new DateTime("$endYear-$nextMonth-22");
 
   // Check if today's date is within the window
   return ($startDate <= $today) && ($today <= $endDate);
