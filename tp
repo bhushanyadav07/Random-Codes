@@ -1,25 +1,27 @@
 <?php
 
+$startDateString = "2024-12-01";  // Statically set start date
+$todayString = "2025-01-01";      // Statically set today's date
+
 function isWithinWindow($startDateString) {
   // Convert start date string to DateTime object
   $startDate = DateTime::createFromFormat('Y-m-d', $startDateString);
 
-  // Get today's date
-  $today = new DateTime();
+  // Convert today's date string to DateTime object
+  $today = DateTime::createFromFormat('Y-m-d', $todayString);
 
   // Create a DateTime object for next month's 22nd day (adjusted for wrapping around year)
   $nextMonth = (int)$startDate->format('m') + 1; // Get next month number
-  $endYear = $startDate->format('Y') + ($nextMonth < (int)$startDate->format('m'));  // Adjust year if wrapping
-  $endDate = new DateTime("$endYear-$nextMonth-22");
+  $endYear = $startDate->format('Y') + ($nextMonth === 12);  // Adjust year if next month is December
+
+  // Handle cases where next_month is 12 (December) to avoid creating invalid dates
+  $endDate = new DateTime("$endYear-" . ($nextMonth === 12 ? 1 : $nextMonth) . "-22");
 
   // Check if today's date is within the window
   return ($startDate <= $today) && ($today <= $endDate);
 }
 
-// Example usage
-$startDate = "2024-06-20";
-
-if (isWithinWindow($startDate)) {
+if (isWithinWindow($startDateString)) {
   echo "1";
 } else {
   echo "0";
