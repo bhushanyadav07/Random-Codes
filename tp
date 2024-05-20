@@ -1,41 +1,28 @@
 <?php
 
-function checkDateRange($startDate) {
-  // Validate input format (optional)
-  if (!preg_match("/^\d{4}-\d{2}-\d{2}$/", $startDate)) {
-    return "Invalid date format. Please use YYYY-MM-DD.";
-  }
+function isWithinWindow($startDateString) {
+  // Convert start date string to DateTime object
+  $startDate = DateTime::createFromFormat('Y-m-d', $startDateString);
 
-  // Extract year, month, and day from start_date
-  $startDateParts = explode("-", $startDate);
-  $startYear = (int) $startDateParts[0];
-  $startMonth = (int) $startDateParts[1];
-  $startDay = (int) $startDateParts[2];
+  // Get today's date
+  $today = new DateTime();
 
-  // Define the end date (22nd of the next month)
-  $endYear = $startYear;
-  $endMonth = ($startMonth % 12) + 1; // Increment month, handle rollover to next year
-  $endDay = 22;
+  // Create a DateTime object for next month's 22nd day (adjusted for wrapping around year)
+  $nextMonth = (int)$startDate->format('m') + 1; // Get next month number
+  $endYear = $startDate->format('Y') + ($nextMonth < (int)$startDate->format('m'));  // Adjust year if wrapping
+  $endDate = new DateTime("$endYear-$nextMonth-22");
 
-  // Check if start_date is within the defined range
-  if (($startYear == $endYear && $startMonth == $endMonth && $startDay <= $endDay) ||
-      ($startYear == $endYear - 1 && $startMonth == 12 && $startDay >= 23)) {
-    return 1; // Within range
-  } else {
-    return 0; // Not within range
-  }
+  // Check if today's date is within the window
+  return ($startDate <= $today) && ($today <= $endDate);
 }
 
 // Example usage
-$startDate = "2024-05-05"; // Example date
-$result = checkDateRange($startDate);
+$startDate = "2024-06-20";
 
-if ($result === 1) {
-  echo "The start_date falls within the defined date range (entire May + June 22nd).";
-} else if ($result === 0) {
-  echo "The start_date does not fall within the defined date range.";
+if (isWithinWindow($startDate)) {
+  echo "1";
 } else {
-  echo $result; // Handle invalid input format (if not validated earlier)
+  echo "0";
 }
 
 ?>
