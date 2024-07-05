@@ -1,35 +1,23 @@
-<?php
+namespace App\Http\Controllers;
 
-$startDateString = "2024-12-01";  // Statically set start date
-$todayString = "2025-01-01";      // Statically set today's date
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
-function isWithinWindow($startDateString) {
-  // Convert start date string to DateTime object
-  $startDate = DateTime::createFromFormat('Y-m-d', $startDateString);
+class FileUploadController extends Controller
+{
+    public function upload(Request $request)
+    {
+        // Validate the request to ensure a file is provided
+        $request->validate([
+            'file' => 'required|file|mimes:jpg,jpeg,png,gif,pdf,doc,docx,txt|max:2048',
+        ]);
 
-  // Convert today's date string to DateTime object
-  $today = DateTime::createFromFormat('Y-m-d', $todayString);
+        // Store the file in the storage folder
+        if ($request->file('file')) {
+            $filePath = $request->file('file')->store('uploads', 'public');
+            return back()->with('success', 'File uploaded successfully!')->with('file', $filePath);
+        }
 
-  // Get month from start date
-  $month = (int)$startDate->format('m');
-
-  // Calculate next month, handling overflow for December
-  $nextMonth = ($month === 12) ? 1 : $month + 1;
-
-  // Adjust year if next month is January (after December)
-  $endYear = $startDate->format('Y') + ($nextMonth === 1);
-
-  // Create a DateTime object for next month's 22nd day (adjusted for wrapping around year)
-  $endDate = new DateTime("$endYear-$nextMonth-22");
-
-  // Check if today's date is within the window
-  return ($startDate <= $today) && ($today <= $endDate);
+        return back()->withErrors(['file' => 'Failed to upload file.']);
+    }
 }
-
-if (isWithinWindow($startDateString)) {
-  echo "1";
-} else {
-  echo "0";
-}
-
-?>
