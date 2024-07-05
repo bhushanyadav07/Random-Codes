@@ -1,23 +1,33 @@
-namespace App\Http\Controllers;
+const uploadButton = document.getElementById('uploadButton');
+const fileUpload = document.getElementById('fileUpload');
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+uploadButton.addEventListener('click', () => {
+  const file = fileUpload.files[0];
 
-class FileUploadController extends Controller
-{
-    public function upload(Request $request)
-    {
-        // Validate the request to ensure a file is provided
-        $request->validate([
-            'file' => 'required|file|mimes:jpg,jpeg,png,gif,pdf,doc,docx,txt|max:2048',
-        ]);
+  if (!file) {
+    alert('Please select a file to upload!');
+    return;
+  }
 
-        // Store the file in the storage folder
-        if ($request->file('file')) {
-            $filePath = $request->file('file')->store('uploads', 'public');
-            return back()->with('success', 'File uploaded successfully!')->with('file', $filePath);
-        }
+  const formData = new FormData();
+  formData.append('file', file);
 
-        return back()->withErrors(['file' => 'Failed to upload file.']);
+  axios.post('/api/store/file', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
     }
-}
+  })
+  .then(response => {
+    if (response.data.success) {
+      alert('File uploaded successfully!');
+      // Handle successful upload (optional)
+    } else {
+      alert('Failed to upload file!');
+      // Handle upload failure (optional)
+    }
+  })
+  .catch(error => {
+    console.error(error);
+    alert('An error occurred during upload!');
+  });
+});
