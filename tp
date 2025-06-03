@@ -1,33 +1,40 @@
-const uploadButton = document.getElementById('uploadButton');
-const fileUpload = document.getElementById('fileUpload');
+<?php
+// Set timezone
+date_default_timezone_set('UTC');
 
-uploadButton.addEventListener('click', () => {
-  const file = fileUpload.files[0];
+// Initialize today's date
+$today = new DateTime();
 
-  if (!file) {
-    alert('Please select a file to upload!');
-    return;
-  }
+// Dates to exclude (e.g., public holidays)
+$exclude = [
+    "2025-05-26",
+    "2025-01-01",
+    "2025-06-23",
+    "2025-07-09"
+];
 
-  const formData = new FormData();
-  formData.append('file', file);
+// Function to add weekdays excluding weekends and specific dates
+function addWeekdays(DateTime $date, int $weekdayCount, array $exclude): DateTime {
+    $count = 0;
+    while ($count < $weekdayCount) {
+        $date->modify('+1 day');
+        $dayOfWeek = $date->format('N'); // 6 = Saturday, 7 = Sunday
+        $formattedDate = $date->format('Y-m-d');
 
-  axios.post('/api/store/file', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
+        // Skip if weekend or in exclude list
+        if ($dayOfWeek < 6 && !in_array($formattedDate, $exclude)) {
+            $count++;
+        }
     }
-  })
-  .then(response => {
-    if (response.data.success) {
-      alert('File uploaded successfully!');
-      // Handle successful upload (optional)
-    } else {
-      alert('Failed to upload file!');
-      // Handle upload failure (optional)
-    }
-  })
-  .catch(error => {
-    console.error(error);
-    alert('An error occurred during upload!');
-  });
-});
+    return $date;
+}
+
+// Calculate both dates
+$result40 = addWeekdays(clone $today, 40, $exclude);
+$result90 = addWeekdays(clone $today, 90, $exclude);
+
+// Output
+echo "Today's Date: " . $today->format('Y-m-d') . PHP_EOL;
+echo "Date after 40 weekdays (excluding weekends + holidays): " . $result40->format('Y-m-d') . PHP_EOL;
+echo "Date after 90 weekdays (excluding weekends + holidays): " . $result90->format('Y-m-d') . PHP_EOL;
+?>
