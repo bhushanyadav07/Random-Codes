@@ -2,10 +2,10 @@
 // Set timezone
 date_default_timezone_set('UTC');
 
-// Initialize today's date
-$today = new DateTime();
+// Set today's date
+$today = date('Y-m-d');
 
-// Dates to exclude (e.g., public holidays)
+// Dates to exclude (public holidays)
 $exclude = [
     "2025-05-26",
     "2025-01-01",
@@ -13,28 +13,31 @@ $exclude = [
     "2025-07-09"
 ];
 
-// Function to add weekdays excluding weekends and specific dates
-function addWeekdays(DateTime $date, int $weekdayCount, array $exclude): DateTime {
+// Function to get date after N weekdays excluding weekends and holidays
+function getTargetDate($startDate, $weekdayCount, $exclude) {
+    $current = strtotime($startDate);
     $count = 0;
-    while ($count < $weekdayCount) {
-        $date->modify('+1 day');
-        $dayOfWeek = $date->format('N'); // 6 = Saturday, 7 = Sunday
-        $formattedDate = $date->format('Y-m-d');
 
-        // Skip if weekend or in exclude list
-        if ($dayOfWeek < 6 && !in_array($formattedDate, $exclude)) {
+    while ($count < $weekdayCount) {
+        $current += 86400; // add 1 day in seconds
+        $dayOfWeek = date('N', $current); // 1 = Mon, 7 = Sun
+        $currentDateStr = date('Y-m-d', $current);
+
+        // Check if it's a weekday and not in the exclude list
+        if ($dayOfWeek < 6 && !in_array($currentDateStr, $exclude)) {
             $count++;
         }
     }
-    return $date;
+
+    return date('Y-m-d', $current);
 }
 
-// Calculate both dates
-$result40 = addWeekdays(clone $today, 40, $exclude);
-$result90 = addWeekdays(clone $today, 90, $exclude);
+// Calculate dates
+$dateAfter40 = getTargetDate($today, 40, $exclude);
+$dateAfter90 = getTargetDate($today, 90, $exclude);
 
 // Output
-echo "Today's Date: " . $today->format('Y-m-d') . PHP_EOL;
-echo "Date after 40 weekdays (excluding weekends + holidays): " . $result40->format('Y-m-d') . PHP_EOL;
-echo "Date after 90 weekdays (excluding weekends + holidays): " . $result90->format('Y-m-d') . PHP_EOL;
+echo "Today's Date: $today" . PHP_EOL;
+echo "Date after 40 weekdays (excluding weekends + holidays): $dateAfter40" . PHP_EOL;
+echo "Date after 90 weekdays (excluding weekends + holidays): $dateAfter90" . PHP_EOL;
 ?>
