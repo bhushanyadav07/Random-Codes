@@ -1,43 +1,113 @@
-<?php
-// Set timezone
-date_default_timezone_set('UTC');
-
-// Set today's date
-$today = date('Y-m-d');
-
-// Dates to exclude (public holidays)
-$exclude = [
-    "2025-05-26",
-    "2025-01-01",
-    "2025-06-23",
-    "2025-07-09"
-];
-
-// Function to get date after N weekdays excluding weekends and holidays
-function getTargetDate($startDate, $weekdayCount, $exclude) {
-    $current = strtotime($startDate);
-    $count = 0;
-
-    while ($count < $weekdayCount) {
-        $current += 86400; // add 1 day in seconds
-        $dayOfWeek = date('N', $current); // 1 = Mon, 7 = Sun
-        $currentDateStr = date('Y-m-d', $current);
-
-        // Check if it's a weekday and not in the exclude list
-        if ($dayOfWeek < 6 && !in_array($currentDateStr, $exclude)) {
-            $count++;
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Laravel Form with Live Data</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        .row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
+        input, select, button {
+            padding: 8px;
+        }
+        table {
+            width: 50%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #555;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Submit Data</h2>
+
+<div class="row">
+    <input type="text" id="text_field" placeholder="Enter text">
+    <select id="dropdown_value">
+        <option value="">Select</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+        <option value="E">E</option>
+    </select>
+    <button id="submitBtn">Submit</button>
+</div>
+
+<h3>Submitted Data</h3>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Text Field</th>
+            <th>Dropdown</th>
+        </tr>
+    </thead>
+    <tbody id="recordsTable">
+        @foreach($records as $record)
+            <tr>
+                <td>{{ $record->id }}</td>
+                <td>{{ $record->text_field }}</td>
+                <td>{{ $record->dropdown_value }}</td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let submitBtn = document.getElementById('submitBtn');
+    let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    submitBtn.addEventListener('click', function() {
+        let textField = document.getElementById('text_field').value;
+        let dropdown = document.getElementById('dropdown_value').value;
+
+        fetch("{{ route('records.store') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrfToken
+            },
+            body: JSON.stringify({
+                text_field: textField,
+                dropdown_value: dropdown
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                fetchRecords();
+                document.getElementById('text_field').value = '';
+                document.getElementById('dropdown_value').value = '';
+            }
+        });
+    });
+
+    function fetchRecords() {
+        fetch("{{ route('records.fetch') }}")
+        .then(res => res.json())
+        .then(data => {
+            let tableBody = document.getElementById('recordsTable');
+            tableBody.innerHTML = '';
+            data.forEach(record => {
+                tableBody.innerHTML += `
+                    <tr>
+                        <td>${record.id}</td>
+                        <td>${record.text_field}</td>
+                        <td>${record.dropdown_value}</td>
+                    </tr>
+                `;
+            });
+        });
     }
+});
+</script>
 
-    return date('Y-m-d', $current);
-}
-
-// Calculate dates
-$dateAfter40 = getTargetDate($today, 40, $exclude);
-$dateAfter90 = getTargetDate($today, 90, $exclude);
-
-// Output
-echo "Today's Date: $today" . PHP_EOL;
-echo "Date after 40 weekdays (excluding weekends + holidays): $dateAfter40" . PHP_EOL;
-echo "Date after 90 weekdays (excluding weekends + holidays): $dateAfter90" . PHP_EOL;
-?>
+</body>
+</html>
