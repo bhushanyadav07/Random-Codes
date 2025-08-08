@@ -1,119 +1,45 @@
-document.addEventListener('DOMContentLoaded', function() {
-    let submitBtn = document.getElementById('submitBtn');
-    let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    let editMode = false;
-    let editId = null;
+<?php
 
-    // Submit or Update
-    submitBtn.addEventListener('click', function() {
-        let empNumber = document.getElementById('emp_number').value.trim();
-        let menuOption = document.getElementById('menu_options').value.trim();
+namespace App\Http\Controllers;
 
-        if (!empNumber || !menuOption) {
-            alert("Please fill all fields.");
-            return;
+use Illuminate\Http\Request;
+use App\Models\previlegeAccess;
+
+class RecordController extends Controller
+{
+    public function index()
+    {
+        return view('index');
+    }
+
+    public function store(Request $request)
+    {
+        previlegeAccess::create([
+            'emp_number'    => $request->emp_number,
+            'menu_options'  => $request->menu_options,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function fetch()
+    {
+        $records = previlegeAccess::orderBy('id', 'desc')->get();
+        return response()->json($records);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $record = previlegeAccess::find($id);
+
+        if ($record) {
+            $record->update([
+                'emp_number'    => $request->emp_number,
+                'menu_options'  => $request->menu_options,
+            ]);
+            return response()->json(['success' => true]);
         }
 
-        let url = editMode ? `/update/${editId}` : "/store";
-        let method = editMode ? "PUT" : "POST";
-
-        fetch(url, {
-            method: method,
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": csrfToken
-            },
-            body: JSON.stringify({
-                emp_number: empNumber,
-                menu_options: menuOption
-            })
-        })
-        .then(res => {
-            if (!res.ok) throw new Error("Network response was not ok");
-            return res.json();
-        })
-        .then(data => {
-            if (data.success) {
-                fetchRecords();
-                resetForm();
-            } else {
-                alert("Something went wrong. Please try again.");
-            }
-        })
-        .catch(err => {
-            console.error("AJAX Error:", err);
-            alert("Error connecting to server.");
-        });
-    });
-
-    // Fetch all records
-    function fetchRecords() {
-        fetch("/fetch")
-        .then(res => {
-            if (!res.ok) throw new Error("Network response was not ok");
-            return res.json();
-        })
-        .then(data => {
-            let tableBody = document.getElementById('recordsTable');
-            tableBody.innerHTML = '';
-
-            if (data.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="4" style="text-align:center;">No Data</td>
-                    </tr>
-                `;
-                return;
-            }
-
-            data.forEach(record => {
-                tableBody.innerHTML += `
-                    <tr>
-                        <td>${record.id}</td>
-                        <td>${record.emp_number}</td>
-                        <td>${record.menu_options}</td>
-                        <td>
-                            <button class="editBtn" data-id="${record.id}" 
-                                data-emp="${record.emp_number}" 
-                                data-menu="${record.menu_options}">
-                                Edit
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            attachEditEvents();
-        })
-        .catch(err => {
-            console.error("Fetch Error:", err);
-            document.getElementById('recordsTable').innerHTML = 
-                '<tr><td colspan="4" style="text-align:center;color:red;">Error fetching data</td></tr>';
-        });
+        return response()->json(['success' => false, 'message' => 'Record not found']);
     }
-
-    // Attach edit events
-    function attachEditEvents() {
-        document.querySelectorAll('.editBtn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.getElementById('emp_number').value = this.dataset.emp;
-                document.getElementById('menu_options').value = this.dataset.menu;
-                submitBtn.textContent = "Update";
-                editMode = true;
-                editId = this.dataset.id;
-            });
-        });
-    }
-
-    // Reset form
-    function resetForm() {
-        document.getElementById('emp_number').value = '';
-        document.getElementById('menu_options').value = '';
-        submitBtn.textContent = "Submit";
-        editMode = false;
-        editId = null;
-    }
-
-    // Initial fetch
-    fetchRecords();
-});
+}
