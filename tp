@@ -1,85 +1,28 @@
-<style>
-.dropdown {
-    position: relative;
-    display: inline-block;
-}
-.dropdown-toggle {
-    padding: 5px 10px;
-    border: 1px solid #ccc;
-    background: white;
-    cursor: pointer;
-    width: 200px;
-    text-align: left;
-}
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    background: #fff;
-    border: 1px solid #ccc;
-    padding: 5px;
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 10;
-    width: 200px;
-}
-.dropdown-menu label {
-    display: block;
-    padding: 3px;
-}
-.dropdown.open .dropdown-menu {
-    display: block;
-}
-</style>
+<!-- resources/views/multiselect.blade.php -->
 
-<div class="row">
-    <input type="text" id="emp_number" placeholder="Enter Employee Number">
-
-    <div class="dropdown" id="menuDropdown">
-        <div class="dropdown-toggle">Select Menu Options</div>
-        <div class="dropdown-menu">
-            <label><input type="checkbox" value="A"> A</label>
-            <label><input type="checkbox" value="B"> B</label>
-            <label><input type="checkbox" value="C"> C</label>
-            <label><input type="checkbox" value="D"> D</label>
-            <label><input type="checkbox" value="E"> E</label>
-        </div>
+<div class="d-flex align-items-start">
+    
+    <!-- Textbox -->
+    <div class="me-3 d-flex flex-column">
+        <label for="myText" class="form-label">Text</label>
+        <input type="text" id="myText" name="your_text" class="form-control" placeholder="Enter text">
     </div>
 
-    <button id="submitBtn">Submit</button>
+    <!-- Multi-select dropdown -->
+    <div class="me-3 d-flex flex-column">
+        <label for="myOptions" class="form-label">Options</label>
+        <select id="myOptions" name="options[]" class="form-select" multiple>
+            <option value="Option1">Option 1</option>
+            <option value="Option2">Option 2</option>
+            <option value="Option3">Option 3</option>
+            <option value="Option4">Option 4</option>
+        </select>
+    </div>
+
+    <!-- Submit button -->
+    <div class="d-flex flex-column">
+        <label class="form-label invisible">Submit</label>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+
 </div>
-
-<h3>Submitted Data</h3>
-<table border="1" cellpadding="8">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Employee Number</th>
-            <th>Menu Options</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody id="recordsTable">
-        @if($records->isEmpty())
-            <tr>
-                <td colspan="4" style="text-align:center;">No Data</td>
-            </tr>
-        @else
-            @foreach($records as $record)
-                <tr>
-                    <td>{{ $record->id }}</td>
-                    <td>{{ $record->emp_number }}</td>
-                    <td>{{ $record->menu_options }}</td>
-                    <td>
-                        <button class="editBtn" data-id="{{ $record->id }}" 
-                            data-emp="{{ $record->emp_number }}" 
-                            data-menu="{{ $record->menu_options }}">
-                            Edit
-                        </button>
-                    </td>
-                </tr>
-            @endforeach
-        @endif
-    </tbody>
-</table>
-
-<script src="{{ asset('js/records.js') }}"></script>
