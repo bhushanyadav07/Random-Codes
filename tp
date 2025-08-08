@@ -1,15 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Privilege Access Management</title>
-</head>
-<body>
+<div class="row">
+    <input type="text" id="emp_number" placeholder="Enter Employee Number">
 
-<h2>Privilege Access Form</h2>
-<div style="margin-bottom:20px;">
-    <input type="text" id="emp_number" placeholder="Employee Number">
-
+    <!-- Changed: added "multiple" attribute -->
     <select id="menu_options" multiple>
         <option value="A">A</option>
         <option value="B">B</option>
@@ -21,21 +13,38 @@
     <button id="submitBtn">Submit</button>
 </div>
 
-<h3>Existing Records</h3>
+<h3>Submitted Data</h3>
 <table border="1" cellpadding="8">
     <thead>
         <tr>
             <th>ID</th>
             <th>Employee Number</th>
             <th>Menu Options</th>
-            <th>Actions</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody id="recordsTable">
-        <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+        @if($records->isEmpty())
+            <tr>
+                <td colspan="4" style="text-align:center;">No Data</td>
+            </tr>
+        @else
+            @foreach($records as $record)
+                <tr>
+                    <td>{{ $record->id }}</td>
+                    <td>{{ $record->emp_number }}</td>
+                    <td>{{ $record->menu_options }}</td>
+                    <td>
+                        <button class="editBtn" data-id="{{ $record->id }}" 
+                            data-emp="{{ $record->emp_number }}" 
+                            data-menu="{{ $record->menu_options }}">
+                            Edit
+                        </button>
+                    </td>
+                </tr>
+            @endforeach
+        @endif
     </tbody>
 </table>
 
 <script src="{{ asset('js/records.js') }}"></script>
-</body>
-</html>
