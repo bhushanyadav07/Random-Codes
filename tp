@@ -1,47 +1,39 @@
-document.addEventListener('DOMContentLoaded', function() {
-    let submitBtn = document.getElementById('submitBtn');
-    let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+<?php
 
-    submitBtn.addEventListener('click', function() {
-        let textField = document.getElementById('text_field').value;
-        let dropdown = document.getElementById('dropdown_value').value;
+namespace App\Http\Controllers;
 
-        fetch("/store", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": csrfToken
-            },
-            body: JSON.stringify({
-                text_field: textField,
-                dropdown_value: dropdown
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                fetchRecords();
-                document.getElementById('text_field').value = '';
-                document.getElementById('dropdown_value').value = '';
-            }
-        });
-    });
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
-    function fetchRecords() {
-        fetch("/fetch")
-        .then(res => res.json())
-        .then(data => {
-            let tableBody = document.getElementById('recordsTable');
-            tableBody.innerHTML = '';
-            data.forEach(record => {
-                tableBody.innerHTML += `
-                    <tr>
-                        <td>${record.id}</td>
-                        <td>${record.text_field}</td>
-                        <td>${record.dropdown_value}</td>
-                    </tr>
-                `;
-            });
-        });
+class RecordController extends Controller
+{
+    public function index()
+    {
+        // Load latest records for initial page
+        $records = DB::table('records')->orderBy('id', 'desc')->get();
+        return view('index', compact('records'));
     }
-});
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'text_field' => 'required|string',
+            'dropdown_value' => 'required|string'
+        ]);
+
+        DB::table('records')->insert([
+            'text_field' => $request->text_field,
+            'dropdown_value' => $request->dropdown_value,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function fetch()
+    {
+        $records = DB::table('records')->orderBy('id', 'desc')->get();
+        return response()->json($records);
+    }
+}
