@@ -1,39 +1,7 @@
-<?php
-
-namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-
-class RecordController extends Controller
-{
-    public function index()
-    {
-        // Load latest records for initial page
-        $records = DB::table('records')->orderBy('id', 'desc')->get();
-        return view('index', compact('records'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'text_field' => 'required|string',
-            'dropdown_value' => 'required|string'
-        ]);
-
-        DB::table('records')->insert([
-            'text_field' => $request->text_field,
-            'dropdown_value' => $request->dropdown_value,
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-
-        return response()->json(['success' => true]);
-    }
-
-    public function fetch()
-    {
-        $records = DB::table('records')->orderBy('id', 'desc')->get();
-        return response()->json($records);
-    }
-}
+CREATE TABLE records (
+    id AUTOINCREMENT PRIMARY KEY,
+    text_field TEXT(255) NOT NULL,
+    dropdown_value TEXT(10) NOT NULL,
+    created_at DATETIME,
+    updated_at DATETIME
+);
