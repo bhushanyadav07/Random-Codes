@@ -1,7 +1,54 @@
-CREATE TABLE records (
-    id AUTOINCREMENT PRIMARY KEY,
-    text_field TEXT(255) NOT NULL,
-    dropdown_value TEXT(10) NOT NULL,
-    created_at DATETIME,
-    updated_at DATETIME
-);
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class RecordController extends Controller
+{
+    public function index()
+    {
+        $records = DB::table('previlegeAccess')->orderBy('id', 'desc')->get();
+        return view('index', compact('records'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'emp_number' => 'required|string',
+            'menu_options' => 'required|string'
+        ]);
+
+        DB::table('previlegeAccess')->insert([
+            'emp_number' => $request->emp_number,
+            'menu_options' => $request->menu_options,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function fetch()
+    {
+        $records = DB::table('previlegeAccess')->orderBy('id', 'desc')->get();
+        return response()->json($records);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'emp_number' => 'required|string',
+            'menu_options' => 'required|string'
+        ]);
+
+        DB::table('previlegeAccess')->where('id', $id)->update([
+            'emp_number' => $request->emp_number,
+            'menu_options' => $request->menu_options,
+            'updated_at' => now()
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+}
