@@ -1,14 +1,49 @@
+<style>
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+.dropdown-toggle {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+    width: 200px;
+    text-align: left;
+}
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+    width: 200px;
+}
+.dropdown-menu label {
+    display: block;
+    padding: 3px;
+}
+.dropdown.open .dropdown-menu {
+    display: block;
+}
+</style>
+
 <div class="row">
     <input type="text" id="emp_number" placeholder="Enter Employee Number">
 
-    <!-- Changed: added "multiple" attribute -->
-    <select id="menu_options" multiple>
-        <option value="A">A</option>
-        <option value="B">B</option>
-        <option value="C">C</option>
-        <option value="D">D</option>
-        <option value="E">E</option>
-    </select>
+    <div class="dropdown" id="menuDropdown">
+        <div class="dropdown-toggle">Select Menu Options</div>
+        <div class="dropdown-menu">
+            <label><input type="checkbox" value="A"> A</label>
+            <label><input type="checkbox" value="B"> B</label>
+            <label><input type="checkbox" value="C"> C</label>
+            <label><input type="checkbox" value="D"> D</label>
+            <label><input type="checkbox" value="E"> E</label>
+        </div>
+    </div>
 
     <button id="submitBtn">Submit</button>
 </div>
