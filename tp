@@ -1,48 +1,112 @@
-<div class="row">
-    <input type="text" id="emp_number" placeholder="Enter Employee Number">
-    <select id="menu_options">
-        <option value="">Select</option>
-        <option value="A">A</option>
-        <option value="B">B</option>
-        <option value="C">C</option>
-        <option value="D">D</option>
-        <option value="E">E</option>
-    </select>
-    <button id="submitBtn">Submit</button>
-</div>
+document.addEventListener('DOMContentLoaded', function() {
+    let submitBtn = document.getElementById('submitBtn');
+    let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    let editMode = false;
+    let editId = null;
 
-<h3>Submitted Data</h3>
-<table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Employee Number</th>
-            <th>Menu Option</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody id="recordsTable">
-        @if($records->isEmpty())
-            <tr>
-                <td colspan="4" style="text-align:center;">No Data</td>
-            </tr>
-        @else
-            @foreach($records as $record)
-                <tr>
-                    <td>{{ $record->id }}</td>
-                    <td>{{ $record->emp_number }}</td>
-                    <td>{{ $record->menu_options }}</td>
-                    <td>
-                        <button class="editBtn" data-id="{{ $record->id }}" 
-                            data-emp="{{ $record->emp_number }}" 
-                            data-menu="{{ $record->menu_options }}">
-                            Edit
-                        </button>
-                    </td>
-                </tr>
-            @endforeach
-        @endif
-    </tbody>
-</table>
+    // Submit or Update record
+    submitBtn.addEventListener('click', function() {
+        let empNumber = document.getElementById('emp_number').value.trim();
+        let menuOption = document.getElementById('menu_options').value.trim();
 
-<script src="{{ asset('js/records.js') }}"></script>
+        if (!empNumber || !menuOption) {
+            alert("Please fill all fields.");
+            return;
+        }
+
+        let url = editMode ? `/update/${editId}` : "/store";
+        let method = editMode ? "PUT" : "POST";
+
+        fetch(url, {
+            method: method,
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrfToken
+            },
+            body: JSON.stringify({
+                emp_number: empNumber,
+                menu_options: menuOption
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                fetchRecords();
+                resetForm();
+            } else {
+                alert("Something went wrong. Please try again.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error connecting to server.");
+        });
+    });
+
+    // Load all records
+    function fetchRecords() {
+        fetch("/fetch")
+        .then(res => res.json())
+        .then(data => {
+            let tableBody = document.getElementById('recordsTable');
+            tableBody.innerHTML = '';
+
+            if (data.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align:center;">No Data</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            data.forEach(record => {
+                tableBody.innerHTML += `
+                    <tr>
+                        <td>${record.id}</td>
+                        <td>${record.emp_number}</td>
+                        <td>${record.menu_options}</td>
+                        <td>
+                            <button class="editBtn" data-id="${record.id}" 
+                                data-emp="${record.emp_number}" 
+                                data-menu="${record.menu_options}">
+                                Edit
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            attachEditEvents();
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error fetching records.");
+        });
+    }
+
+    // Attach edit events to dynamically loaded buttons
+    function attachEditEvents() {
+        document.querySelectorAll('.editBtn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.getElementById('emp_number').value = this.dataset.emp;
+                document.getElementById('menu_options').value = this.dataset.menu;
+                submitBtn.textContent = "Update";
+                editMode = true;
+                editId = this.dataset.id;
+            });
+        });
+    }
+
+    // Reset form after submit/update
+    function resetForm() {
+        document.getElementById('emp_number').value = '';
+        document.getElementById('menu_options').value = '';
+        submitBtn.textContent = "Submit";
+        editMode = false;
+        editId = null;
+    }
+
+    // Initial load
+    fetchRecords();
+});
