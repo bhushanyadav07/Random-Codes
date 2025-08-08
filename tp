@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let editMode = false;
     let editId = null;
 
-    // Submit or Update record
+    // Submit or Update
     submitBtn.addEventListener('click', function() {
         let empNumber = document.getElementById('emp_number').value.trim();
         let menuOption = document.getElementById('menu_options').value.trim();
@@ -28,7 +28,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 menu_options: menuOption
             })
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("Network response was not ok");
+            return res.json();
+        })
         .then(data => {
             if (data.success) {
                 fetchRecords();
@@ -38,15 +41,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(err => {
-            console.error(err);
+            console.error("AJAX Error:", err);
             alert("Error connecting to server.");
         });
     });
 
-    // Load all records
+    // Fetch all records
     function fetchRecords() {
         fetch("/fetch")
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("Network response was not ok");
+            return res.json();
+        })
         .then(data => {
             let tableBody = document.getElementById('recordsTable');
             tableBody.innerHTML = '';
@@ -80,12 +86,13 @@ document.addEventListener('DOMContentLoaded', function() {
             attachEditEvents();
         })
         .catch(err => {
-            console.error(err);
-            alert("Error fetching records.");
+            console.error("Fetch Error:", err);
+            document.getElementById('recordsTable').innerHTML = 
+                '<tr><td colspan="4" style="text-align:center;color:red;">Error fetching data</td></tr>';
         });
     }
 
-    // Attach edit events to dynamically loaded buttons
+    // Attach edit events
     function attachEditEvents() {
         document.querySelectorAll('.editBtn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -98,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Reset form after submit/update
+    // Reset form
     function resetForm() {
         document.getElementById('emp_number').value = '';
         document.getElementById('menu_options').value = '';
@@ -107,6 +114,6 @@ document.addEventListener('DOMContentLoaded', function() {
         editId = null;
     }
 
-    // Initial load
+    // Initial fetch
     fetchRecords();
 });
