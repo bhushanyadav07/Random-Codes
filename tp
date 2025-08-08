@@ -1,54 +1,48 @@
-<?php
+<div class="row">
+    <input type="text" id="emp_number" placeholder="Enter Employee Number">
+    <select id="menu_options">
+        <option value="">Select</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+        <option value="E">E</option>
+    </select>
+    <button id="submitBtn">Submit</button>
+</div>
 
-namespace App\Http\Controllers;
+<h3>Submitted Data</h3>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Employee Number</th>
+            <th>Menu Option</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="recordsTable">
+        @if($records->isEmpty())
+            <tr>
+                <td colspan="4" style="text-align:center;">No Data</td>
+            </tr>
+        @else
+            @foreach($records as $record)
+                <tr>
+                    <td>{{ $record->id }}</td>
+                    <td>{{ $record->emp_number }}</td>
+                    <td>{{ $record->menu_options }}</td>
+                    <td>
+                        <button class="editBtn" data-id="{{ $record->id }}" 
+                            data-emp="{{ $record->emp_number }}" 
+                            data-menu="{{ $record->menu_options }}">
+                            Edit
+                        </button>
+                    </td>
+                </tr>
+            @endforeach
+        @endif
+    </tbody>
+</table>
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-
-class RecordController extends Controller
-{
-    public function index()
-    {
-        $records = DB::table('previlegeAccess')->orderBy('id', 'desc')->get();
-        return view('index', compact('records'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'emp_number' => 'required|string',
-            'menu_options' => 'required|string'
-        ]);
-
-        DB::table('previlegeAccess')->insert([
-            'emp_number' => $request->emp_number,
-            'menu_options' => $request->menu_options,
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-
-        return response()->json(['success' => true]);
-    }
-
-    public function fetch()
-    {
-        $records = DB::table('previlegeAccess')->orderBy('id', 'desc')->get();
-        return response()->json($records);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'emp_number' => 'required|string',
-            'menu_options' => 'required|string'
-        ]);
-
-        DB::table('previlegeAccess')->where('id', $id)->update([
-            'emp_number' => $request->emp_number,
-            'menu_options' => $request->menu_options,
-            'updated_at' => now()
-        ]);
-
-        return response()->json(['success' => true]);
-    }
-}
+<script src="{{ asset('js/records.js') }}"></script>
