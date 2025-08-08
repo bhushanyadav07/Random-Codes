@@ -1,40 +1,109 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Privilege Access Management</title>
-</head>
-<body>
+document.addEventListener('DOMContentLoaded', function() {
+    let submitBtn = document.getElementById('submitBtn');
+    let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    let editMode = false;
+    let editId = null;
 
-<h2>Privilege Access Form</h2>
-<div style="margin-bottom:20px;">
-    <input type="text" id="emp_number" placeholder="Employee Number">
-    <select id="menu_options">
-        <option value="">Select Option</option>
-        <option value="A">A</option>
-        <option value="B">B</option>
-        <option value="C">C</option>
-        <option value="D">D</option>
-        <option value="E">E</option>
-    </select>
-    <button id="submitBtn">Submit</button>
-</div>
+    // Submit or Update
+    submitBtn.addEventListener('click', function() {
+        let empNumber = document.getElementById('emp_number').value.trim();
+        let menuOption = document.getElementById('menu_options').value.trim();
 
-<h3>Existing Records</h3>
-<table border="1" cellpadding="8">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Employee Number</th>
-            <th>Menu Option</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody id="recordsTable">
-        <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
-    </tbody>
-</table>
+        if (!empNumber || !menuOption) {
+            alert("Please fill all fields.");
+            return;
+        }
 
-<script src="{{ asset('js/records.js') }}"></script>
-</body>
-</html>
+        let url = editMode ? `/update/${editId}` : "/store";
+        let method = editMode ? "PUT" : "POST";
+
+        fetch(url, {
+            method: method,
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrfToken
+            },
+            body: JSON.stringify({
+                emp_number: empNumber,
+                menu_options: menuOption
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                fetchRecords();
+                resetForm();
+            } else {
+                alert(data.message || "Something went wrong.");
+            }
+        })
+        .catch(err => {
+            console.error("AJAX Error:", err);
+            alert("Error connecting to server.");
+        });
+    });
+
+    // Fetch all records
+    function fetchRecords() {
+        fetch("/fetch")
+        .then(res => res.json())
+        .then(data => {
+            let tableBody = document.getElementById('recordsTable');
+            tableBody.innerHTML = '';
+
+            if (data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No Data</td></tr>`;
+                return;
+            }
+
+            data.forEach(record => {
+                tableBody.innerHTML += `
+                    <tr>
+                        <td>${record.id}</td>
+                        <td>${record.emp_number}</td>
+                        <td>${record.menu_options}</td>
+                        <td>
+                            <button class="editBtn" data-id="${record.id}" 
+                                data-emp="${record.emp_number}" 
+                                data-menu="${record.menu_options}">
+                                Edit
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            attachEditEvents();
+        })
+        .catch(err => {
+            console.error("Fetch Error:", err);
+            document.getElementById('recordsTable').innerHTML =
+                '<tr><td colspan="4" style="text-align:center;color:red;">Error fetching data</td></tr>';
+        });
+    }
+
+    // Attach edit events
+    function attachEditEvents() {
+        document.querySelectorAll('.editBtn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.getElementById('emp_number').value = this.dataset.emp;
+                document.getElementById('menu_options').value = this.dataset.menu;
+                submitBtn.textContent = "Update";
+                editMode = true;
+                editId = this.dataset.id;
+            });
+        });
+    }
+
+    // Reset form
+    function resetForm() {
+        document.getElementById('emp_number').value = '';
+        document.getElementById('menu_options').value = '';
+        submitBtn.textContent = "Submit";
+        editMode = false;
+        editId = null;
+    }
+
+    // Initial fetch
+    fetchRecords();
+});
