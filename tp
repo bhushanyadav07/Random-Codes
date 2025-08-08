@@ -59,55 +59,7 @@
     </tbody>
 </table>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let submitBtn = document.getElementById('submitBtn');
-    let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-    submitBtn.addEventListener('click', function() {
-        let textField = document.getElementById('text_field').value;
-        let dropdown = document.getElementById('dropdown_value').value;
-
-        fetch("{{ route('records.store') }}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": csrfToken
-            },
-            body: JSON.stringify({
-                text_field: textField,
-                dropdown_value: dropdown
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                fetchRecords();
-                document.getElementById('text_field').value = '';
-                document.getElementById('dropdown_value').value = '';
-            }
-        });
-    });
-
-    function fetchRecords() {
-        fetch("{{ route('records.fetch') }}")
-        .then(res => res.json())
-        .then(data => {
-            let tableBody = document.getElementById('recordsTable');
-            tableBody.innerHTML = '';
-            data.forEach(record => {
-                tableBody.innerHTML += `
-                    <tr>
-                        <td>${record.id}</td>
-                        <td>${record.text_field}</td>
-                        <td>${record.dropdown_value}</td>
-                    </tr>
-                `;
-            });
-        });
-    }
-});
-</script>
+<script src="{{ asset('js/records.js') }}"></script>
 
 </body>
 </html>
