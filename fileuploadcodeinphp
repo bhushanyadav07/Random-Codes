@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple File Attachments with Remove Option</title>
+    <style>
+        .file-list {
+            margin-top: 20px;
+            display: flex;  /* Align items horizontally */
+            flex-wrap: wrap;   /* Allow wrapping to next line if needed */
+            gap: 10px;         /* Space between file items */
+        }
+        .file-item {
+            margin: 5px 0;
+            display: flex;  /* Align file name and remove button horizontally */
+            align-items: center;
+            gap: 10px;          /* Space between file name and cross */
+        }
+        .remove-btn {
+            background: none;
+            color: red;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+        .remove-btn:hover {
+            color: darkred;
+        }
+
+        /* Hide the default file input */
+        #fileInput {
+            display: none;
+        }
+
+        /* Custom label to style the file input */
+        .custom-file-input {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .custom-file-input:hover {
+            background-color: #0056b3;
+        }
+
+        /* To make the label look like a file input */
+        .file-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        .file-label:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Select Multiple Files</h2>
+
+    <!-- Custom label to trigger file input -->
+    <label for="fileInput" class="file-label" id="fileLabel">No files selected</label>
+    
+    <!-- File input with the 'multiple' attribute (hidden) -->
+    <input type="file" id="fileInput" multiple>
+
+    <!-- List to display selected files -->
+    <div id="fileList" class="file-list"></div>
+
+    <script>
+        // Get the file input, file list, and label elements
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const fileLabel = document.getElementById('fileLabel');
+        let allFiles = [];
+
+        // Add an event listener to handle file selection
+        fileInput.addEventListener('change', function() {
+            const newFiles = Array.from(fileInput.files);
+            
+            // Add the newly selected files to the allFiles array (avoiding duplicates)
+            newFiles.forEach(file => {
+                if (!allFiles.some(f => f.name === file.name)) {
+                    allFiles.push(file);
+                }
+            });
+
+            // Update label text to reflect the selected file(s)
+            const fileNames = allFiles.map(file => file.name).join(', ');
+            fileLabel.textContent = fileNames || 'No files selected'; // Update the label text
+
+            // Clear and rebuild the file list
+            updateFileList();
+
+            // **Reset file input after selection to allow re-selection of the same file**
+            fileInput.value = '';  // Reset the input field
+        });
+
+        // Function to update the file list display
+        function updateFileList() {
+            fileList.innerHTML = '';
+            allFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.classList.add('file-item');
+                
+                const fileName = document.createElement('span');
+                fileName.textContent = file.name;
+
+                // Create the "Remove" button as a cross mark
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = '✖';  // Cross mark character
+                removeBtn.classList.add('remove-btn');
+                removeBtn.addEventListener('click', () => removeFile(index));
+
+                fileItem.appendChild(fileName);
+                fileItem.appendChild(removeBtn);
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        // Function to remove a file from the list
+        function removeFile(index) {
+            allFiles.splice(index, 1); // Remove the file from the array
+            updateFileList(); // Rebuild the file list
+
+            // Update label text if there are no files left
+            const fileNames = allFiles.map(file => file.name).join(', ');
+            fileLabel.textContent = fileNames || 'No files selected'; // Update the label text
+        }
+    </script>
+
+</body>
+</html>
