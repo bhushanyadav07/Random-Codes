@@ -1,28 +1,73 @@
-<!-- resources/views/multiselect.blade.php -->
+//attachment files
 
-<div class="d-flex align-items-start">
-    
-    <!-- Textbox -->
-    <div class="me-3 d-flex flex-column">
-        <label for="myText" class="form-label">Text</label>
-        <input type="text" id="myText" name="your_text" class="form-control" placeholder="Enter text">
-    </div>
+<?php
 
-    <!-- Multi-select dropdown -->
-    <div class="me-3 d-flex flex-column">
-        <label for="myOptions" class="form-label">Options</label>
-        <select id="myOptions" name="options[]" class="form-select" multiple>
-            <option value="Option1">Option 1</option>
-            <option value="Option2">Option 2</option>
-            <option value="Option3">Option 3</option>
-            <option value="Option4">Option 4</option>
-        </select>
-    </div>
+namespace App\Http\Controllers;
 
-    <!-- Submit button -->
-    <div class="d-flex flex-column">
-        <label class="form-label invisible">Submit</label>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </div>
+use Illuminate\Http\Request;
 
-</div>
+class AttachmentController extends Controller
+{
+    public function upload(Request $request)
+    {
+        // 🔢 Get ID dynamically from request
+        $id = (int) $request->input('id');
+
+        $year = date('Y');
+
+        // 📁 public/storage/uploads/{year}/{id}
+        $uploadDir = public_path("storage/uploads/{$year}/{$id}");
+
+        // Create directory once (cheap)
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $uploadedFiles = [];
+
+        $keys = [
+            'attachment_file1',
+            'attachment_file2',
+            'attachment_file3',
+            'attachment_file4',
+        ];
+
+        foreach ($keys as $key) {
+
+            if (!$request->hasFile($key)) {
+                continue;
+            }
+
+            $file = $request->file($key);
+
+            if (!$file->isValid()) {
+                continue;
+            }
+
+            // 🔐 Safe original filename
+            $nameOnly = pathinfo(
+                $file->getClientOriginalName(),
+                PATHINFO_FILENAME
+            );
+
+            // Your logic: last 7 characters
+            $nameOnly = substr($nameOnly, -7);
+
+            $extension = $file->getClientOriginalExtension();
+
+            // ⚡ Fast filename
+            $filename = $id . '_' . time() . '_' . $nameOnly . '.' . $extension;
+
+            // 🚀 FAST MOVE
+            $file->move($uploadDir, $filename);
+
+            // 🌐 Public URL
+            $uploadedFiles[$key] = "/storage/uploads/{$year}/{$id}/{$filename}";
+        }
+
+        return response()->json([
+            'status' => true,
+            'files' => $uploadedFiles
+        ]);
+    }
+}
