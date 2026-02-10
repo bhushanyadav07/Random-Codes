@@ -1,73 +1,40 @@
-//attachment files
-
 <?php
 
-namespace App\Http\Controllers;
+function calculateYearEndBalance($givenDate) {
+    $monthlyIncrement = 1.5;
+    $totalBalance = 0;
 
-use Illuminate\Http\Request;
+    $givenTs = strtotime($givenDate);
 
-class AttachmentController extends Controller
-{
-    public function upload(Request $request)
-    {
-        // 🔢 Get ID dynamically from request
-        $id = (int) $request->input('id');
+    $startMonth = (int)date('m', $givenTs);
+    $startYear  = (int)date('Y', $givenTs);
 
-        $year = date('Y');
+    // Get last day of the given month
+    $monthEndTs = strtotime(date('Y-m-t', $givenTs));
 
-        // 📁 public/storage/uploads/{year}/{id}
-        $uploadDir = public_path("storage/uploads/{$year}/{$id}");
-
-        // Create directory once (cheap)
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+    // ❗ If date is EXACTLY month-end, skip this month
+    if ($givenTs == $monthEndTs) {
+        $startMonth++;
+        if ($startMonth > 12) {
+            $startMonth = 1;
+            $startYear++;
         }
-
-        $uploadedFiles = [];
-
-        $keys = [
-            'attachment_file1',
-            'attachment_file2',
-            'attachment_file3',
-            'attachment_file4',
-        ];
-
-        foreach ($keys as $key) {
-
-            if (!$request->hasFile($key)) {
-                continue;
-            }
-
-            $file = $request->file($key);
-
-            if (!$file->isValid()) {
-                continue;
-            }
-
-            // 🔐 Safe original filename
-            $nameOnly = pathinfo(
-                $file->getClientOriginalName(),
-                PATHINFO_FILENAME
-            );
-
-            // Your logic: last 7 characters
-            $nameOnly = substr($nameOnly, -7);
-
-            $extension = $file->getClientOriginalExtension();
-
-            // ⚡ Fast filename
-            $filename = $id . '_' . time() . '_' . $nameOnly . '.' . $extension;
-
-            // 🚀 FAST MOVE
-            $file->move($uploadDir, $filename);
-
-            // 🌐 Public URL
-            $uploadedFiles[$key] = "/storage/uploads/{$year}/{$id}/{$filename}";
-        }
-
-        return response()->json([
-            'status' => true,
-            'files' => $uploadedFiles
-        ]);
     }
+
+    // Dynamic end year (current year)
+    $endYear  = (int)date('Y');
+    $endMonth = 12;
+
+    // Count months
+    for ($year = $startYear; $year <= $endYear; $year++) {
+
+        $monthStart = ($year == $startYear) ? $startMonth : 1;
+        $monthEnd   = ($year == $endYear) ? $endMonth : 12;
+
+        for ($month = $monthStart; $month <= $monthEnd; $month++) {
+            $totalBalance += $monthlyIncrement;
+        }
+    }
+
+    return $totalBalance;
 }
